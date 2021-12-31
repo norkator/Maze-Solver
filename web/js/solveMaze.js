@@ -25,7 +25,6 @@ async function solve(){
     let done = false;
     while (!done) {
 		done = await popProcessPush()
-		console.log(done);
 	}
 	// showPath();
 
