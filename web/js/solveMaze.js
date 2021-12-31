@@ -1,6 +1,9 @@
 var helperQueue = [];
+var fillTimeout;
+var keepSolving;
 
-function solve(){
+async function solve(){
+	keepSolving = true;
 	helperQueue = [];
     if(startPos.x == -1 || startPos.y == -1){
         alert('Select a starting point before proceeding further');
@@ -18,48 +21,89 @@ function solve(){
     document.getElementById('endBtn').disabled = true;
 
     helperQueue.push(startPos);
-    popProcessPush()
+
+    let done = false;
+    while (!done) {
+		done = await popProcessPush()
+		console.log(done);
+	}
 	// showPath();
+
+	fillCell(startPos.x,startPos.y);
 }
 
-function popProcessPush(){
-	setTimeout(function(){
-		if(helperQueue.length > 0){
-			currRow = helperQueue[0].x;
-			currCol = helperQueue[0].y;
-
-			if(currRow+1 == endPos.x && currCol == endPos.y){
-				document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
-				return;
-			}
-			if(currRow-1 == endPos.x && currCol == endPos.y){
-				document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
-				return;
-			}
-			if(currRow == endPos.x && currCol+1 == endPos.y){
-				document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
-				return;
-			}
-			if(currRow == endPos.x && currCol-1 == endPos.y){
-				document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
-				return;
-			}
-
-			if(isSolvePressed){
-				if(!isBlocked(currRow,currCol)){
-					setNeighbour(currRow, currCol);
-				}else{
-	
+function fillCell(a,b){
+	fillTimeout = setTimeout(function(){
+		if(!document.getElementById('cell_'+(a)+'_'+(b)).className.includes('bg-secondary') && keepSolving){
+			if(a<ROWS){
+				if(b<COLS){
+					if(maze[a][b] != 0){
+						document.getElementById('cell_'+(a)+'_'+(b)).innerHTML = maze[a][b];
+						document.getElementById('cell_'+(a)+'_'+(b)).classList.remove('bg-info');
+						document.getElementById('cell_'+(a)+'_'+(b)).classList.add('bg-secondary');
+					}
 				}
-			}else {
-				return;
 			}
-			
-			helperQueue.shift();
-			popProcessPush();
+			if(a>0 && maze[a-1][b] != -1){
+				fillCell(a-1,b)
+			}
+			if(a<ROWS-1 && maze[a+1][b] != -1){
+				fillCell(a+1,b)
+			}
+			if(b>0 && maze[a][b-1] != -1){
+				fillCell(a,b-1)
+			}
+			if(b<COLS-1 && maze[a][b+1] != -1){
+				fillCell(a,b+1)
+			}
 		} else {
+			return;
 		}
-	},50); 
+	},50)
+		
+	return;
+}
+
+async function popProcessPush(){
+	if(helperQueue.length > 0){
+		currRow = helperQueue[0].x;
+		currCol = helperQueue[0].y;
+
+		if(currRow+1 == endPos.x && currCol == endPos.y){
+			maze[endPos.x][endPos.y] = maze[currRow][currCol]+1;
+			// document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
+			return true;
+		}
+		if(currRow-1 == endPos.x && currCol == endPos.y){
+			maze[endPos.x][endPos.y] = maze[currRow][currCol]+1;
+			// document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
+			return true;
+		}
+		if(currRow == endPos.x && currCol+1 == endPos.y){
+			maze[endPos.x][endPos.y] = maze[currRow][currCol]+1;
+			// document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
+			return true;
+		}
+		if(currRow == endPos.x && currCol-1 == endPos.y){
+			maze[endPos.x][endPos.y] = maze[currRow][currCol]+1;
+			// document.getElementById('cell_'+(endPos.x)+'_'+(endPos.y)).innerHTML = maze[currRow][currCol]+1;
+			return true;
+		}
+
+		if(isSolvePressed){
+			if(!isBlocked(currRow,currCol)){
+				setNeighbour(currRow, currCol);
+			}else{
+
+			}
+		}else {
+			return true;
+		}
+
+		helperQueue.shift();
+	} else {
+	}
+	return;
 }
 
 // function showPath(){
@@ -112,9 +156,9 @@ function setNeighbour(a, b){
 				maze[a-1][b] = possibleVal;
 				helperQueue.push({x: a-1, y: b});
 			}
-            document.getElementById('cell_'+(a-1)+'_'+(b)).innerHTML = maze[a-1][b];
-			document.getElementById('cell_'+(a-1)+'_'+(b)).classList.remove('bg-info');
-			document.getElementById('cell_'+(a-1)+'_'+(b)).classList.add('bg-secondary');
+            // document.getElementById('cell_'+(a-1)+'_'+(b)).innerHTML = maze[a-1][b];
+			// document.getElementById('cell_'+(a-1)+'_'+(b)).classList.remove('bg-info');
+			// document.getElementById('cell_'+(a-1)+'_'+(b)).classList.add('bg-secondary');
 		}
 	}
 	if(b>0){
@@ -125,9 +169,9 @@ function setNeighbour(a, b){
 				maze[a][b-1] = possibleVal;
 				helperQueue.push({x: a, y: b-1});
 			}
-            document.getElementById('cell_'+(a)+'_'+(b-1)).innerHTML = maze[a][b-1];
-			document.getElementById('cell_'+(a)+'_'+(b-1)).classList.remove('bg-info');
-			document.getElementById('cell_'+(a)+'_'+(b-1)).classList.add('bg-secondary');
+            // document.getElementById('cell_'+(a)+'_'+(b-1)).innerHTML = maze[a][b-1];
+			// document.getElementById('cell_'+(a)+'_'+(b-1)).classList.remove('bg-info');
+			// document.getElementById('cell_'+(a)+'_'+(b-1)).classList.add('bg-secondary');
 		}
 	}
 	if(a<ROWS-1){
@@ -138,9 +182,9 @@ function setNeighbour(a, b){
 				maze[a+1][b] = possibleVal;
 				helperQueue.push({x: a+1,y: b});
 			}
-            document.getElementById('cell_'+(a+1)+'_'+(b)).innerHTML = maze[a+1][b];
-			document.getElementById('cell_'+(a+1)+'_'+(b)).classList.remove('bg-info');
-			document.getElementById('cell_'+(a+1)+'_'+(b)).classList.add('bg-secondary');
+            // document.getElementById('cell_'+(a+1)+'_'+(b)).innerHTML = maze[a+1][b];
+			// document.getElementById('cell_'+(a+1)+'_'+(b)).classList.remove('bg-info');
+			// document.getElementById('cell_'+(a+1)+'_'+(b)).classList.add('bg-secondary');
 		}
 	}
 	if(b<COLS-1){
@@ -151,9 +195,9 @@ function setNeighbour(a, b){
 				maze[a][b+1] = possibleVal;
 				helperQueue.push({x: a, y: b+1});
 			}
-            document.getElementById('cell_'+(a)+'_'+(b+1)).innerHTML = maze[a][b+1];
-			document.getElementById('cell_'+(a)+'_'+(b+1)).classList.remove('bg-info');
-			document.getElementById('cell_'+(a)+'_'+(b+1)).classList.add('bg-secondary');
+            // document.getElementById('cell_'+(a)+'_'+(b+1)).innerHTML = maze[a][b+1];
+			// document.getElementById('cell_'+(a)+'_'+(b+1)).classList.remove('bg-info');
+			// document.getElementById('cell_'+(a)+'_'+(b+1)).classList.add('bg-secondary');
 		}
 	}
 }
